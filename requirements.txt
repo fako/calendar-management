@@ -5,3 +5,4 @@ google-auth-httplib2==0.0.3
 google-auth-oauthlib==0.4.1
 ipython==7.11.1
 jinja2==2.10.3
+pandas==0.25.0

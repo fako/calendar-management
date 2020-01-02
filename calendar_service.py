@@ -49,7 +49,7 @@ def get_calendar_service(namespace):
     return service
 
 
-def get_time_boundries(year, start_month, end_month):
+def get_time_boundries(year, start_month, end_month, end_day=None):
     # Check input
     assert year.isnumeric(), "expected year to be a number"
     assert 1 <= start_month <= 12, "start_month should be between 1 and 12"
@@ -60,7 +60,7 @@ def get_time_boundries(year, start_month, end_month):
         end_month = start_month
     # Get the datetime indicated by the input
     start_time = datetime(year=year, month=start_month, day=1)
-    end_day = monthrange(year, end_month)[1]
+    end_day = end_day or monthrange(year, end_month)[1]
     end_time = datetime(year=year, month=end_month, day=end_day, hour=23, minute=59, second=59)
     # 'Z' postfix indicates UTC time
     return start_time.isoformat() + "Z", end_time.isoformat() + "Z"

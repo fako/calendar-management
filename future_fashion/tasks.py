@@ -9,9 +9,10 @@ from calendar_service import (get_calendar_service, get_time_boundries, get_conf
 
 
 @task
-def report_events(ctx, username, year, start_month=1, end_month=12, report=False):
+def report_events(ctx, username, year, start_month=1, end_month=12, until=0, to_file=False):
     # Get and parse events
-    time_start, time_end = get_time_boundries(year, start_month, end_month)
+    until = until or None
+    time_start, time_end = get_time_boundries(year, start_month, end_month, end_day=until)
     calendar_id = f"{username}@goodfashionfriend.com"
     service = get_calendar_service("future_fashion")
     events_result = service.events() \
@@ -27,17 +28,18 @@ def report_events(ctx, username, year, start_month=1, end_month=12, report=False
     # Get basic aggregations
     total_time = frame["duration"].sum().total_seconds()
     total_hours = total_time / 60 / 60
-    residu_hours = total_hours % 8
     # Write report
-    if report:
+    if to_file:
         # Get template engine and basic variables
         engine = get_template_engine()
+        start_month_text = str(start_month).zfill(2)
+        end_month_text = str(end_month).zfill(2)
         if start_month != end_month:
-            file_name = f"{username}_{year}-{start_month}_tm_{year}-{end_month}"
-            title = f"Uren registratie {calendar_id} voor {year}-{start_month} t/m {year}-{end_month}"
+            file_name = f"{username}_{year}-{start_month_text}_tm_{year}-{end_month_text}"
+            title = f"Uren registratie {calendar_id} voor {year}-{start_month_text} t/m {year}-{end_month_text}"
         else:
-            file_name = f"{username}_{year}-{start_month}"
-            title = f"Uren registratie {calendar_id} voor {year}-{start_month}"
+            file_name = f"{username}_{year}-{start_month_text}"
+            title = f"Uren registratie {calendar_id} voor {year}-{start_month_text}"
         # Format time delta's without seconds
         frame["duration"] = Timedelta64Formatter(frame["duration"]).get_result()
         frame["duration"] = frame["duration"].apply(lambda dur: dur[:-3])
@@ -52,11 +54,10 @@ def report_events(ctx, username, year, start_month=1, end_month=12, report=False
         report_file = os.path.join("future_fashion", "reports", f"{file_name}.html")
         report = engine.get_template("report.html")
         with open(report_file, "w") as fd:
-            fd.write(report.render(title=title, table=frame.to_html(index=False), total_hours=total_hours,
-                                   residu_hours=residu_hours))
+            fd.write(report.render(title=title, table=frame.to_html(index=False), total_hours=total_hours))
         # Create PDF
         with ctx.cd(os.path.join("future_fashion", "reports")):
             ctx.run(f"wkhtmltopdf {file_name}.html {file_name}.pdf")
     # CLI output
     print(f"Total hours: {total_hours}")
-    print(f"Total time: {floor(total_hours/8)} days and {residu_hours} hours")
+    print(f"Total time: {floor(total_hours/8)} days and {total_hours%8} hours")
