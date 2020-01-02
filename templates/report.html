@@ -6,10 +6,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
     <title>{{ title }}</title>
+
+    <style>
+        table, th, td {
+            border-collapse: collapse;
+            border: 1px solid black
+        }
+        th, td {
+            padding: 10px;
+        }
+    </style>
 </head>
 
 <body>
-    <h1>{{ title }}</h1>
+    <h2>{{ title }}</h2>
     <p>Totaal gemaakte uren: {{ total_hours }}</p>
     {{ table }}
 </body>
