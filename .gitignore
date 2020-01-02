@@ -1,0 +1,11 @@
+# IDE and OS
+.DS_Store
+*.iml
+.idea
+
+# Environments
+venv/
+
+# Credentials and authentication
+*.pickle
+**/credentials.json
