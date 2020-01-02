@@ -1,7 +1,7 @@
 from invoke import Collection
-from future_fashion.tasks import list_events as ff_list_events
+from future_fashion.tasks import report_events as ff_report_events
 
 
 namespace = Collection(
-    Collection("ff", ff_list_events)
+    Collection("ff", ff_report_events)
 )

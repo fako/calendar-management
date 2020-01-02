@@ -9,3 +9,6 @@ venv/
 # Credentials and authentication
 *.pickle
 **/credentials.json
+
+# Output
+**/reports/*.html

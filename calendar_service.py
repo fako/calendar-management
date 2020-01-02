@@ -5,12 +5,20 @@ from datetime import datetime
 from functools import reduce
 
 import pandas as pd
+from jinja2 import Environment, FileSystemLoader
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 
 
 SCOPES = ['https://www.googleapis.com/auth/calendar']
+
+
+def get_template_engine():
+    environment = Environment(
+        loader=FileSystemLoader("templates")
+    )
+    return environment
 
 
 def get_calendar_service(namespace):
