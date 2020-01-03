@@ -88,7 +88,7 @@ def get_confirmed_nonoverlap_events_frame(events):
     def reduce_overlap(previous_interval, next_event):
         # Early exit when dealing with the first overlap
         if isinstance(previous_interval, dict):
-            return next_event
+            return previous_interval
         # Determine if there is any overlap
         next_start = next_event["start"]["dateTime"]
         next_end = next_event["end"]["dateTime"]
