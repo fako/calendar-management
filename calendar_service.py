@@ -103,7 +103,7 @@ def get_confirmed_nonoverlap_events_frame(events):
     # Return DataFrame for all valid events
     data = [
         {
-            "activity": event["summary"],
+            "activity": event.get("summary", "unknown"),
             "day": pd.Timestamp(event["start"]["dateTime"]).strftime("%d-%m-%Y"),
             "start": pd.Timestamp(event["start"]["dateTime"]).strftime("%H:%M"),
             "end": pd.Timestamp(event["end"]["dateTime"]).strftime("%H:%M"),
