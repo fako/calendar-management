@@ -77,9 +77,19 @@ def get_confirmed_nonoverlap_events_frame(events):
         if event.get("status", None) == "confirmed" and
         "out-of-office" not in event.get("description", "")
     ]
+    ooo = [
+        event for event in events
+        if "out-of-office" in event.get("description", "")
+    ]
     confirmed_count = len(confirmed)
-    if events_count > confirmed_count:
+    ooo_count = len(ooo)
+    if events_count > (confirmed_count + ooo_count):
         print(f"Detected {events_count-confirmed_count} unconfirmed events")
+        print([
+            event.get("summary", "unknown") for event in events
+            if event.get("status", None) != "confirmed" and not
+            "out-of-office" in event.get("description", "")
+        ])
     if not confirmed_count:
         print("Did not find any confirmed events")
         return
