@@ -1,4 +1,5 @@
 import os
+import re
 from invoke import task
 from math import floor
 
@@ -6,6 +7,19 @@ from pandas.io.formats.format import Timedelta64Formatter
 
 from calendar_service import (get_calendar_service, get_time_boundries, get_confirmed_nonoverlap_events_frame,
                               get_template_engine)
+
+
+activity_category_pattern = re.compile("^\s*\[\s*(\w+)\s*\]")
+
+
+def get_activity_category(activity):
+    match = activity_category_pattern.match(activity)
+    if not match:
+        return "gff"
+    category = match.group(1)
+    if category in ["Other", "other"]:
+        category = "oth"
+    return category.lower()
 
 
 @task
@@ -28,6 +42,7 @@ def report_events(ctx, username, year, start_month=1, end_month=12, until=0, to_
     # Get basic aggregations
     total_time = frame["duration"].sum().total_seconds()
     total_hours = total_time / 60 / 60
+    frame["category"] = frame["activity"].apply(get_activity_category)
     # Write report
     if to_file:
         # Get template engine and basic variables
@@ -61,3 +76,5 @@ def report_events(ctx, username, year, start_month=1, end_month=12, until=0, to_
     # CLI output
     print(f"Total hours: {total_hours}")
     print(f"Total time: {floor(total_hours/8)} days and {total_hours%8} hours")
+    print(f"Time category summary:")
+    print(frame[["category", "duration"]].groupby(["category"]).sum())
