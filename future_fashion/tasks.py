@@ -76,5 +76,6 @@ def report_events(ctx, username, year, start_month=1, end_month=12, until=0, to_
     # CLI output
     print(f"Total hours: {total_hours}")
     print(f"Total time: {floor(total_hours/8)} days and {total_hours%8} hours")
-    print(f"Time category summary:")
-    print(frame[["category", "duration"]].groupby(["category"]).sum())
+    if not to_file:
+        print(f"Time category summary:")
+        print(frame[["category", "duration"]].groupby(["category"]).sum())
