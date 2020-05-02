@@ -75,7 +75,7 @@ def report_events(ctx, username, year, start_month=1, end_month=12, until=0, to_
             ctx.run(f"wkhtmltopdf {file_name}.html {file_name}.pdf")
     # CLI output
     print(f"Total hours: {total_hours}")
-    print(f"Total time: {floor(total_hours/8)} days and {total_hours%8} hours")
+    print(f"Total time: {floor(total_hours/8)} working days and {total_hours%8} hours")
     if not to_file:
         print(f"Time category summary:")
         print(frame[["category", "duration"]].groupby(["category"]).sum())
