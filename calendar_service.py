@@ -67,11 +67,14 @@ def get_time_boundries(year, start_month, end_month, end_day=None):
 
 
 def get_confirmed_nonoverlap_events_frame(events):
-    # Filter out any non confirmed events
+    # We ignore all "whole day" events and events without times
+    events = [event for event in events if event["start"].get("dateTime", None)]
+    # Basic early exit
     events_count = len(events)
     if not events_count:
         print("No events found")
         return
+    # Filter out any non confirmed events
     confirmed = [
         event for event in events
         if event.get("status", None) == "confirmed" and
