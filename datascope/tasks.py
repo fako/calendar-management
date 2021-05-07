@@ -9,7 +9,7 @@ from calendar_service import (get_calendar_service, get_time_boundries, get_conf
 
 
 CUSTOMER_TO_CALENDAR_ID = {
-    "surfnet": "fakoberkers.nl_2md1qlaos828miq6fiasqhj2hs@group.calendar.google.com"
+    "surf": "fakoberkers.nl_2md1qlaos828miq6fiasqhj2hs@group.calendar.google.com"
 }
 
 
