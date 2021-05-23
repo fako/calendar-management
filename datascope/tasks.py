@@ -1,6 +1,7 @@
 import os
 from invoke import task
 from math import floor
+from datetime import datetime, timedelta
 
 from pandas.io.formats.format import Timedelta64Formatter
 
@@ -66,5 +67,33 @@ def report_events(ctx, customer, year, start_month=1, end_month=12, until=0, to_
         with ctx.cd(os.path.join("datascope", "reports")):
             ctx.run(f"wkhtmltopdf {file_name}.html {file_name}.pdf")
     # CLI output
+    print(f"Total hours: {total_hours}")
+    print(f"Total time: {floor(total_hours/8)} days and {total_hours%8} hours")
+
+
+@task
+def report_week(ctx, customer, year, week):
+    time_start = datetime.strptime(f'{year}-W{int(week)}-1', "%Y-W%W-%w")
+    time_end = time_start + timedelta(days=6, hours=23, minutes=59, seconds=59)
+    time_start = time_start.isoformat() + "Z"
+    time_end = time_end.isoformat() + "Z"
+    calendar_id = CUSTOMER_TO_CALENDAR_ID[customer]
+    service = get_calendar_service("datascope")
+    events_result = service.events() \
+        .list(calendarId=calendar_id, timeMin=time_start, timeMax=time_end, singleEvents=True, orderBy='startTime') \
+        .execute()
+    events = events_result.get('items', [])
+    if not events:
+        print(f'No events found for week {week} in {year}')
+        return
+    frame = get_confirmed_nonoverlap_events_frame(events)
+    if frame is None:
+        return
+    frame["weekday"] = frame["day"].apply(lambda day: datetime.strptime(day, "%d-%m-%Y").strftime("%a"))
+    durations = frame.groupby(["weekday"])["duration"].sum()
+    print(durations)
+    total_time = durations.sum().total_seconds()
+    total_hours = total_time / 60 / 60
+    print()
     print(f"Total hours: {total_hours}")
     print(f"Total time: {floor(total_hours/8)} days and {total_hours%8} hours")
