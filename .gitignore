@@ -13,3 +13,4 @@ venv/
 # Output
 **/reports/*.html
 **/reports/*.pdf
+**/overviews/*.html

@@ -1,3 +1,5 @@
+import os
+from datetime import date
 from urllib.parse import unquote
 from getpass import getpass
 from invoke import task, Exit
@@ -5,7 +7,7 @@ import requests
 from bs4 import BeautifulSoup
 from tqdm import tqdm
 
-from calendar_service import get_calendar_service
+from calendar_service import get_calendar_service, get_template_engine
 
 
 CALENDARS = {
@@ -18,22 +20,30 @@ CALENDARS = {
         "gebouw": "ph5kjn373elgur93u3i50m4urc@group.calendar.google.com"
     }
 }
+GROUPS = [
+    "communicatie",
+    "financien",
+    "gebouw",
+    "kascommissie",
+    "logeerkamer",
+    "programmering",
+    "publieke-werken",
+    "tuin",
+    "vluchtelingenkamer",
+    "vve-bestuur",
+    "zaal"
+]
 
 
-@task()
-def sync_calendar_permissions(ctx, group="vve-mededelingen"):
-
-    list_url = f"http://lists.nautilus-amsterdam.nl/mailman/admin/{group}"
-
-    # Login to Mailman
-    mailman_password = getpass()
+def login_mailman(list_url, mailman_password):
     session = requests.Session()
     response = session.post(list_url, data={"adminpw": mailman_password})
     if response.status_code != 200:
         raise Exit("Could not login to mailman. Is the password correct?")
-    print("Login successful")
+    return session
 
-    # Fetch members HTML from Mailman
+
+def fetch_members(session, list_url):
     response = session.get(f"{list_url}/members")
     if response.status_code != 200:
         raise Exit("Could not fetch mailman members.")
@@ -41,6 +51,17 @@ def sync_calendar_permissions(ctx, group="vve-mededelingen"):
     all_members = set()
     for input in soup.find_all("input", attrs={"name": "user"}):
         all_members.add(unquote(input["value"]))
+    return all_members
+
+
+@task()
+def sync_calendar_permissions(ctx, group="vve-mededelingen"):
+
+    list_url = f"http://lists.nautilus-amsterdam.nl/mailman/admin/{group}"
+    mailman_password = getpass()
+    session = login_mailman(list_url, mailman_password)
+    print("Login successful")
+    all_members = fetch_members(session, list_url)
 
     # Figure out which e-mails are missing access for each calendar
     service = get_calendar_service("nautilus")
@@ -62,3 +83,26 @@ def sync_calendar_permissions(ctx, group="vve-mededelingen"):
                 }
             }
             service.acl().insert(calendarId=calendar_id, body=acl_insert, sendNotifications=True).execute()
+
+
+@task()
+def generate_groups_overview(ctx):
+    groups = []
+    mailman_password = getpass()
+    for group_code in GROUPS:
+        print(f"Processing: {group_code}")
+        list_url = f"http://lists.nautilus-amsterdam.nl/mailman/admin/{group_code}"
+        session = login_mailman(list_url, mailman_password)
+        members = fetch_members(session, list_url)
+        group = {
+            "code": group_code,
+            "name": group_code.replace("-", " ").capitalize(),
+            "email": f"{group_code}@nautilus-amsterdam.nl",
+            "members": members
+        }
+        groups.append(group)
+    engine = get_template_engine()
+    overview_file = os.path.join("nautilus", "overviews", f"werkgroepen-{date.today()}.html")
+    overview = engine.get_template("werkgroepen.html")
+    with open(overview_file, "w") as fd:
+        fd.write(overview.render(groups=groups))
