@@ -70,6 +70,7 @@ def report_events(ctx, customer, year, start_month=1, end_month=12, until=0, to_
     # CLI output
     print(f"Total hours: {total_hours}")
     print(f"Total time: {floor(total_hours/8)} days and {total_hours%8} hours")
+    return total_hours
 
 
 @task
@@ -98,3 +99,16 @@ def report_week(ctx, customer, year, week):
     print()
     print(f"Total hours: {total_hours}")
     print(f"Total time: {floor(total_hours/8)} days and {total_hours%8} hours")
+
+
+@task(iterable="customers")
+def report_quarter(ctx, customers, year, quarter):
+    start_month = (int(quarter) - 1) * 3 + 1
+    end_month = start_month + 2
+    hours = 0
+    for customer in customers:
+        customer_hours = report_events(ctx, customer, year, start_month, end_month, to_file=True)
+        if customer_hours is not None:
+            hours += customer_hours
+    print(f"Total hours this quarter: {hours}")
+    print(f"Quarter norm is: {1225/4}")
