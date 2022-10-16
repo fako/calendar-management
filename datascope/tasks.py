@@ -13,7 +13,8 @@ CUSTOMER_TO_CALENDAR_ID = {
     "surf": "fakoberkers.nl_2md1qlaos828miq6fiasqhj2hs@group.calendar.google.com",
     "bns": "c_19of6juc7hqv1mq0u124909u9s@group.calendar.google.com",
     "nppo": "c_phh2uirvu4n21mgfv70e3tqjg4@group.calendar.google.com",
-    "datascope": "fakoberkers.nl_qcr2r6ne4b8fm3pnj7u5f42vhk@group.calendar.google.com"
+    "datascope": "fakoberkers.nl_qcr2r6ne4b8fm3pnj7u5f42vhk@group.calendar.google.com",
+    "publinova": "c_dhvua3pb4el5jkpse90a275oek@group.calendar.google.com"
 }
 
 
