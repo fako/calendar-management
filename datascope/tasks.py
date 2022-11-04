@@ -14,7 +14,8 @@ CUSTOMER_TO_CALENDAR_ID = {
     "bns": "c_19of6juc7hqv1mq0u124909u9s@group.calendar.google.com",
     "nppo": "c_phh2uirvu4n21mgfv70e3tqjg4@group.calendar.google.com",
     "datascope": "fakoberkers.nl_qcr2r6ne4b8fm3pnj7u5f42vhk@group.calendar.google.com",
-    "publinova": "c_dhvua3pb4el5jkpse90a275oek@group.calendar.google.com"
+    "publinova": "c_dhvua3pb4el5jkpse90a275oek@group.calendar.google.com",
+    "autometa": "c_ace4691e4f3ce66ccd1441b3a78c81f7868c59026578a9b8f658153c3304498b@group.calendar.google.com",
 }
 
 
