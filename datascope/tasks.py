@@ -17,6 +17,7 @@ CUSTOMER_TO_CALENDAR_ID = {
     "publinova": "c_dhvua3pb4el5jkpse90a275oek@group.calendar.google.com",
     "autometa": "c_ace4691e4f3ce66ccd1441b3a78c81f7868c59026578a9b8f658153c3304498b@group.calendar.google.com",
 }
+WEEK_DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 
 
 @task
@@ -89,15 +90,31 @@ def report_week(ctx, customer, year, week):
     events = events_result.get('items', [])
     if not events:
         print(f'No events found for week {week} in {year}')
-        return
+        return 0
     frame = get_confirmed_nonoverlap_events_frame(events)
     if frame is None:
-        return
+        return 0
     frame["weekday"] = frame["day"].apply(lambda day: datetime.strptime(day, "%d-%m-%Y").strftime("%a"))
     durations = frame.groupby(["weekday"])["duration"].sum()
-    print(durations)
+    for week_day in WEEK_DAYS:
+        if week_day not in durations:
+            continue
+        print(week_day, "\t", durations[week_day].total_seconds() / 60 / 60)
     total_time = durations.sum().total_seconds()
     total_hours = total_time / 60 / 60
+    print()
+    print(f"Total hours: {total_hours}")
+    print(f"Total time: {floor(total_hours/8)} days and {total_hours%8} hours")
+    return total_hours
+
+
+@task(iterable="weeks")
+def report_weeks(ctx, customer, year, weeks):
+    total_hours = 0
+    for week in weeks:
+        print()
+        print(f"Hours for week {week}")
+        total_hours += report_week(ctx, customer, year, week)
     print()
     print(f"Total hours: {total_hours}")
     print(f"Total time: {floor(total_hours/8)} days and {total_hours%8} hours")
