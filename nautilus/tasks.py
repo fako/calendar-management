@@ -12,13 +12,8 @@ from calendar_service import get_calendar_service, get_template_engine
 
 CALENDARS = {
     "vve-mededelingen": {
-        "zaal": "opmk262p9m2m6dfecr9mh3k3o0@group.calendar.google.com",
-        "expo": "j84v91s3kmrs8ar513smdqvlq8@group.calendar.google.com",
-        "kamer": "qjfvat6t7kei30788gehgstbt0@group.calendar.google.com"
+        "publieke_werken": "nautilus.woonwerkgebouw@gmail.com",
     },
-    "gebouw": {
-        "gebouw": "ph5kjn373elgur93u3i50m4urc@group.calendar.google.com"
-    }
 }
 GROUPS = [
     "communicatie",
