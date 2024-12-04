@@ -18,6 +18,7 @@ CUSTOMER_TO_CALENDAR_ID = {
     "publinova": "c_dhvua3pb4el5jkpse90a275oek@group.calendar.google.com",
     "autometa": "c_ace4691e4f3ce66ccd1441b3a78c81f7868c59026578a9b8f658153c3304498b@group.calendar.google.com",
     "toekomst_atelier": "c_5cc955c247fce047fa28661b1e2d0c10498465e995c77bec723f26882ea15171@group.calendar.google.com",
+    "just_ask": "c_94c265af5186fddccfe83c62d6f4c3907a57580f6b1ccec9b4e7f8e95b357f5a@group.calendar.google.com"
 }
 WEEK_DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 
