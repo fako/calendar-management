@@ -9,5 +9,5 @@ pandas==1.2.4
 requests==2.24.0
 beautifulsoup4==4.9.1
 ipdb==0.13.3
-tqdm==4.48.2
+tqdm==4.66.3
 markupsafe==2.0.1
