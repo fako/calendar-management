@@ -3,8 +3,6 @@ from invoke import task
 from math import floor
 from datetime import datetime, timedelta
 
-from pandas.io.formats.format import Timedelta64Formatter
-
 from calendar_service import (get_calendar_service, get_time_boundries, get_confirmed_nonoverlap_events_frame,
                               get_template_engine)
 
@@ -55,9 +53,13 @@ def report_events(ctx, customer, year, start_month=1, end_month=12, until=0, to_
         else:
             file_name = f"{customer}_{year}-{start_month_text}"
             title = f"Uren registratie {customer} voor {year}-{start_month_text}"
-        # Format time delta's without seconds
-        frame["duration"] = Timedelta64Formatter(frame["duration"]).get_result()
-        frame["duration"] = frame["duration"].apply(lambda dur: dur[:-3])
+        # Format time delta's without seconds (HH:MM)
+        def format_timedelta(td):
+            total_seconds = int(td.total_seconds())
+            hours, remainder = divmod(total_seconds, 3600)
+            minutes, _ = divmod(remainder, 60)
+            return f"{hours}:{minutes:02d}"
+        frame["duration"] = frame["duration"].apply(format_timedelta)
         # Translate the output
         frame = frame.rename(axis="columns", mapper={
             "activity": "activiteit",
