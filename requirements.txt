@@ -6,7 +6,7 @@ google-auth-oauthlib==0.4.1
 ipython==8.10.0
 jinja2==2.10.3
 pandas==1.2.4
-requests==2.24.0
+requests==2.32.4
 beautifulsoup4==4.9.1
 ipdb==0.13.3
 tqdm==4.48.2
