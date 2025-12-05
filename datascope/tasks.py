@@ -22,6 +22,41 @@ CUSTOMER_TO_CALENDAR_ID = {
 WEEK_DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 
 
+def format_timedelta(td):
+    """Format timedelta without seconds (HH:MM)"""
+    total_seconds = int(td.total_seconds())
+    hours, remainder = divmod(total_seconds, 3600)
+    minutes, _ = divmod(remainder, 60)
+    return f"{hours}:{minutes:02d}"
+
+
+def write_report_to_file(ctx, frame, total_hours, file_name, title):
+    """Write a report dataframe to HTML and PDF files."""
+    engine = get_template_engine()
+
+    # Format time delta's without seconds (HH:MM)
+    frame = frame.copy()
+    frame["duration"] = frame["duration"].apply(format_timedelta)
+
+    # Translate the output
+    frame = frame.rename(axis="columns", mapper={
+        "activity": "activiteit",
+        "day": "dag",
+        "end": "einde",
+        "duration": "duur (uren:minuten)"
+    })
+
+    # Write to HTML file
+    report_file = os.path.join("datascope", "reports", f"{file_name}.html")
+    report = engine.get_template("report.html")
+    with open(report_file, "w") as fd:
+        fd.write(report.render(title=title, table=frame.to_html(index=False), total_hours=total_hours))
+
+    # Create PDF
+    with ctx.cd(os.path.join("datascope", "reports")):
+        ctx.run(f"wkhtmltopdf {file_name}.html {file_name}.pdf")
+
+
 @task
 def report_events(ctx, customer, year, start_month=1, end_month=12, until=0, to_file=False):
     # Get and parse events
@@ -44,8 +79,6 @@ def report_events(ctx, customer, year, start_month=1, end_month=12, until=0, to_
     total_hours = total_time / 60 / 60
     # Write report
     if to_file:
-        # Get template engine and basic variables
-        engine = get_template_engine()
         start_month_text = str(start_month).zfill(2)
         end_month_text = str(end_month).zfill(2)
         if start_month != end_month:
@@ -54,28 +87,7 @@ def report_events(ctx, customer, year, start_month=1, end_month=12, until=0, to_
         else:
             file_name = f"{customer}_{year}-{start_month_text}"
             title = f"Uren registratie {customer} voor {year}-{start_month_text}"
-        # Format time delta's without seconds (HH:MM)
-        def format_timedelta(td):
-            total_seconds = int(td.total_seconds())
-            hours, remainder = divmod(total_seconds, 3600)
-            minutes, _ = divmod(remainder, 60)
-            return f"{hours}:{minutes:02d}"
-        frame["duration"] = frame["duration"].apply(format_timedelta)
-        # Translate the output
-        frame = frame.rename(axis="columns", mapper={
-            "activity": "activiteit",
-            "day": "dag",
-            "end": "einde",
-            "duration": "duur (uren:minuten)"
-        })
-        # Write to HTML file
-        report_file = os.path.join("datascope", "reports", f"{file_name}.html")
-        report = engine.get_template("report.html")
-        with open(report_file, "w") as fd:
-            fd.write(report.render(title=title, table=frame.to_html(index=False), total_hours=total_hours))
-        # Create PDF
-        with ctx.cd(os.path.join("datascope", "reports")):
-            ctx.run(f"wkhtmltopdf {file_name}.html {file_name}.pdf")
+        write_report_to_file(ctx, frame, total_hours, file_name, title)
     # CLI output
     print(f"Total hours: {total_hours}")
     print(f"Total time: {floor(total_hours/8)} days and {total_hours%8} hours")
@@ -83,15 +95,15 @@ def report_events(ctx, customer, year, start_month=1, end_month=12, until=0, to_
 
 
 @task
-def report_week(ctx, customer, year, week):
+def report_week(ctx, customer, year, week, to_file=False):
     time_start = datetime.strptime(f'{year}-W{int(week):02d}-1', "%G-W%V-%u")
     time_end = time_start + timedelta(days=6, hours=23, minutes=59, seconds=59)
-    time_start = time_start.isoformat() + "Z"
-    time_end = time_end.isoformat() + "Z"
+    time_start_iso = time_start.isoformat() + "Z"
+    time_end_iso = time_end.isoformat() + "Z"
     calendar_id = CUSTOMER_TO_CALENDAR_ID[customer]
     service = get_calendar_service("datascope")
     events_result = service.events() \
-        .list(calendarId=calendar_id, timeMin=time_start, timeMax=time_end, singleEvents=True, orderBy='startTime') \
+        .list(calendarId=calendar_id, timeMin=time_start_iso, timeMax=time_end_iso, singleEvents=True, orderBy='startTime') \
         .execute()
     events = events_result.get('items', [])
     if not events:
@@ -100,27 +112,42 @@ def report_week(ctx, customer, year, week):
     frame = get_confirmed_nonoverlap_events_frame(events)
     if frame is None:
         return 0
-    frame["weekday"] = frame["day"].apply(lambda day: datetime.strptime(day, "%d-%m-%Y").strftime("%a"))
-    durations = frame.groupby(["weekday"])["duration"].sum()
+
+    # Calculate totals
+    total_time = frame["duration"].sum().total_seconds()
+    total_hours = total_time / 60 / 60
+
+    # CLI output with weekday grouping
+    frame_with_weekday = frame.copy()
+    frame_with_weekday["weekday"] = frame_with_weekday["day"].apply(
+        lambda day: datetime.strptime(day, "%d-%m-%Y").strftime("%a")
+    )
+    durations = frame_with_weekday.groupby(["weekday"])["duration"].sum()
     for week_day in WEEK_DAYS:
         if week_day not in durations:
             continue
         print(week_day, "\t", durations[week_day].total_seconds() / 60 / 60)
-    total_time = durations.sum().total_seconds()
-    total_hours = total_time / 60 / 60
     print()
     print(f"Total hours: {total_hours}")
     print(f"Total time: {floor(total_hours/8)} days and {total_hours%8} hours")
+
+    # Write file if requested
+    if to_file:
+        week_text = str(week).zfill(2)
+        file_name = f"{customer}_{year}-W{week_text}"
+        title = f"Uren registratie {customer} voor {year} week {week_text}"
+        write_report_to_file(ctx, frame, total_hours, file_name, title)
+
     return total_hours
 
 
 @task(iterable="weeks")
-def report_weeks(ctx, customer, year, weeks):
+def report_weeks(ctx, customer, year, weeks, to_file=False):
     total_hours = 0
     for week in weeks:
         print()
         print(f"Hours for week {week}")
-        total_hours += report_week(ctx, customer, year, week)
+        total_hours += report_week(ctx, customer, year, week, to_file=to_file)
     print()
     print(f"Total hours: {total_hours}")
     print(f"Total time: {floor(total_hours/8)} days and {total_hours%8} hours")
