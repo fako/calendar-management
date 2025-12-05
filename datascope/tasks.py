@@ -84,7 +84,7 @@ def report_events(ctx, customer, year, start_month=1, end_month=12, until=0, to_
 
 @task
 def report_week(ctx, customer, year, week):
-    time_start = datetime.strptime(f'{year}-W{int(week)}-1', "%Y-W%W-%w")
+    time_start = datetime.strptime(f'{year}-W{int(week):02d}-1', "%G-W%V-%u")
     time_end = time_start + timedelta(days=6, hours=23, minutes=59, seconds=59)
     time_start = time_start.isoformat() + "Z"
     time_end = time_end.isoformat() + "Z"
