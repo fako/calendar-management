@@ -7,7 +7,7 @@ from calendar_service import (get_calendar_service, get_time_boundries, get_conf
                               get_template_engine)
 
 
-activity_category_pattern = re.compile("^\s*\[\s*(\w+)\s*\]")
+activity_category_pattern = re.compile(r"^\s*\[\s*(\w+)\s*\]")
 
 
 def get_activity_category(activity):
